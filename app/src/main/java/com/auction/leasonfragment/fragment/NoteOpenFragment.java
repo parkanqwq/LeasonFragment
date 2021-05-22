@@ -1,14 +1,22 @@
 package com.auction.leasonfragment.fragment;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import com.auction.leasonfragment.R;
@@ -19,6 +27,7 @@ public class NoteOpenFragment extends Fragment {
     public static final String ARG_INDEX = "index";
     public static final int DEFAULT_INDEX = 0;
     private int index = DEFAULT_INDEX;
+    private boolean isLandscape;
 
     public NoteOpenFragment() {}
 
@@ -42,6 +51,8 @@ public class NoteOpenFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_note_open, container, false);
+        setToolBar(view);
+
         DatePicker datePicker = view.findViewById(R.id.datePicker);
         TextView textNote = view.findViewById(R.id.textNote);
         TextView noteData = view.findViewById(R.id.noteData);
@@ -66,5 +77,33 @@ public class NoteOpenFragment extends Fragment {
             noteModel.noteData[index] = forDateIndex;
         });
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.main_fragment, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    private void setToolBar(View view){
+        isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        Toolbar toolbar = view.findViewById(R.id.toolbar_frag);
+        AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
+        appCompatActivity.setSupportActionBar(toolbar);
+        setHasOptionsMenu(true);
+        if (isLandscape) {
+            toolbar.setVisibility(View.GONE);
+        } else {
+            toolbar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_add){
+            Toast.makeText(getContext(), "настройка текста", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

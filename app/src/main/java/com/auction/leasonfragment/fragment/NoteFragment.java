@@ -32,7 +32,7 @@ public class NoteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_note, container, false);
+        return  inflater.inflate(R.layout.fragment_note, container, false);
     }
 
     @Override
@@ -52,8 +52,6 @@ public class NoteFragment extends Fragment {
             showImage(position);
         }
     }
-
-
 
     private void initList(View view) {
         LinearLayout linearLayout = (LinearLayout) view;

@@ -11,7 +11,7 @@ public class NoteModel {
     public final String[] noteDescription = {
             "Купить конфет",
             "Набрать колы",
-            "Позвонить и пригласить"
+            "Позвонить"
     };
     public final String[] noteTextArr = {
             "Купить как можно больше Конфет!",
