@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,8 +20,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
+import com.auction.leasonfragment.MainActivity;
 import com.auction.leasonfragment.R;
-import com.auction.leasonfragment.model.NoteModel;
 
 public class NoteOpenFragment extends Fragment {
 
@@ -28,6 +29,7 @@ public class NoteOpenFragment extends Fragment {
     public static final int DEFAULT_INDEX = 0;
     private int index = DEFAULT_INDEX;
     private boolean isLandscape;
+    private EditText textNote;
 
     public NoteOpenFragment() {}
 
@@ -54,16 +56,15 @@ public class NoteOpenFragment extends Fragment {
         setToolBar(view);
 
         DatePicker datePicker = view.findViewById(R.id.datePicker);
-        TextView textNote = view.findViewById(R.id.textNote);
+        textNote = view.findViewById(R.id.textNote);
         TextView noteData = view.findViewById(R.id.noteData);
         TextView noteName = view.findViewById(R.id.noteName);
         LinearLayout linerDate = view.findViewById(R.id.linerDate);
         Button buttonOK = view.findViewById(R.id.buttonOK);
 
-        NoteModel noteModel = new NoteModel();
-        noteName.setText(noteModel.noteName[index]);
-        noteData.setText(noteModel.noteData[index]);
-        textNote.setText(noteModel.noteTextArr[index]);
+        noteName.setText(MainActivity.noteDB.noteName[index]);
+        noteData.setText(MainActivity.noteDB.noteData[index]);
+        textNote.setText(MainActivity.noteDB.noteTextArr[index]);
 
         noteData.setOnClickListener(view1 -> {
             linerDate.setVisibility(View.VISIBLE);
@@ -74,9 +75,15 @@ public class NoteOpenFragment extends Fragment {
                     + "/" + datePicker.getYear());
             noteData.setText(forDateIndex);
             linerDate.setVisibility(View.GONE);
-            noteModel.noteData[index] = forDateIndex;
+            MainActivity.noteDB.noteData[index] = forDateIndex;
         });
         return view;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MainActivity.noteDB.noteTextArr[index] = textNote.getText().toString();
     }
 
     @Override
