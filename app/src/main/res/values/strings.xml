@@ -23,4 +23,5 @@
     <string name="ok">ok</string>
     <string name="changeName">Изменить имя</string>
     <string name="срфтпуВфеу">Изменить дату</string>
+    <string name="exit_google_app">Выйти из акаунта</string>
 </resources>

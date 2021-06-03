@@ -21,7 +21,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.auction.leasonfragment.adapter.AdapterNoteList;
 import com.auction.leasonfragment.model.ModelNoteList;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,23 +49,94 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int RC_SIGN_IN = 100;
+    private GoogleSignInClient googleSignInClient;
+    private SignInButton googleSignBtn;
+    private FirebaseAuth firebaseAuth;
     private DatabaseReference reference;
     private List<ModelNoteList> modelNoteLists;
     private AdapterNoteList adapterNoteList;
     private RecyclerView recyclerView;
+    private TextView userNameGoogle;
+    private NavigationView navigationView;
+    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
+
         initView();
+        actMethod();
+    }
+
+    private void signIn() {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    private void actMethod() {
+        googleSignBtn = findViewById(R.id.googleSignBtn);
+        recyclerView = findViewById(R.id.recyclerView);
+        googleSignBtn.setOnClickListener(view -> {
+            signIn();
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account.getIdToken());
+            } catch (ApiException e) {
+                Toast.makeText(this, "Google sign in failed " + e, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void firebaseAuthWithGoogle(String idToken) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        firebaseAuth.signInWithCredential(credential)
+                .addOnSuccessListener(authResult -> {
+                    FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                    recreate();
+                }).addOnFailureListener(e -> {
+                });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null){
+            userNameGoogle.setText(currentUser.getDisplayName());
+            recyclerView.setVisibility(View.VISIBLE);
+            navigationView.setVisibility(View.VISIBLE);
+        } else {
+            userNameGoogle.setText("Гость");
+            recyclerView.setVisibility(View.GONE);
+            navigationView.setVisibility(View.GONE);
+        }
     }
 
     private void initView() {
-        recyclerView = findViewById(R.id.recyclerView);
         Toolbar toolbar = initToolbar();
         initDrawer(toolbar);
     }
+
 
     private Toolbar initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -71,7 +153,10 @@ public class MainActivity extends AppCompatActivity {
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView = findViewById(R.id.nav_view);
+        View headerLayout = navigationView.inflateHeaderView(R.layout.nav_header_main);
+        userNameGoogle = headerLayout.findViewById(R.id.userNameGoogle);
+
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (navigateFragment(id)){
@@ -93,6 +178,10 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean navigateFragment(int id) {
         switch (id) {
+            case R.id.action_exit_google:
+                FirebaseAuth.getInstance().signOut();
+                recreate();
+                return true;
             case R.id.action_settings:
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(intent);
@@ -117,15 +206,20 @@ public class MainActivity extends AppCompatActivity {
                         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
                         String stringDate = sdf.format(date);
 
-                        reference = FirebaseDatabase.getInstance().getReference("Note")
-                                .push();
-                        HashMap<String, Object> hashMapRef = new HashMap<>();
-                        hashMapRef.put("id", date.toString()+dateplas);
-                        hashMapRef.put("text", "");
-                        hashMapRef.put("name", name);
-                        hashMapRef.put("dateNote", stringDate);
-                        hashMapRef.put("nameToLowerCase", name.toLowerCase());
-                        reference.setValue(hashMapRef);
+                        try {
+                            reference = FirebaseDatabase.getInstance().getReference("Note")
+                                    .child(currentUser.getUid())
+                                    .child("Note")
+                                    .push();
+                            HashMap<String, Object> hashMapRef = new HashMap<>();
+                            hashMapRef.put("id", date.toString()+dateplas);
+                            hashMapRef.put("text", "");
+                            hashMapRef.put("name", name);
+                            hashMapRef.put("dateNote", stringDate);
+                            hashMapRef.put("nameToLowerCase", name.toLowerCase());
+                            reference.setValue(hashMapRef);
+                        } catch (Exception e){}
+
                         Toast.makeText(getApplicationContext(), "Заметка создана", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -140,8 +234,14 @@ public class MainActivity extends AppCompatActivity {
 
                 adminDialogDelete.setNegativeButton("Нет", (dialogCansel, which) -> dialogCansel.dismiss());
                 adminDialogDelete.setPositiveButton("Удалить все!", (dialogFinish, which) -> {
-                    DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Note");
-                    reference.removeValue();
+                    try {
+                        DatabaseReference reference = FirebaseDatabase.getInstance()
+                                .getReference("Note")
+                                .child(currentUser.getUid())
+                                .child("Note");
+                        reference.removeValue();
+                    } catch (Exception e){}
+
                     Toast.makeText(this, "Все заметки удалены", Toast.LENGTH_SHORT).show();
                 });
                 adminDialogDelete.show();
@@ -171,26 +271,30 @@ public class MainActivity extends AppCompatActivity {
 
     private void searchUsers(String s) {
         modelNoteLists = new ArrayList<>();
-        Query query = FirebaseDatabase.getInstance().getReference("Note").orderByChild("nameToLowerCase")
-                .startAt(s)
-                .endAt(s+"\uf8ff");
-        query.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                modelNoteLists.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    ModelNoteList modelNoteList = snapshot.getValue(ModelNoteList.class);
-                    modelNoteLists.add(modelNoteList);
+        try {
+            Query query = FirebaseDatabase.getInstance().getReference("Note")
+                    .child(currentUser.getUid())
+                    .child("Note")
+                    .orderByChild("nameToLowerCase")
+                    .startAt(s)
+                    .endAt(s+"\uf8ff");
+            query.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    modelNoteLists.clear();
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                        ModelNoteList modelNoteList = snapshot.getValue(ModelNoteList.class);
+                        modelNoteLists.add(modelNoteList);
+                    }
+                    adapterNoteList = new AdapterNoteList(getApplicationContext(), modelNoteLists, dataSnapshot);
+                    recyclerView.setAdapter(adapterNoteList);
                 }
-                adapterNoteList = new AdapterNoteList(getApplicationContext(), modelNoteLists, dataSnapshot);
-                recyclerView.setAdapter(adapterNoteList);
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
 
-            }
-        });
-
+                }
+            });
+        } catch (Exception e){}
     }
 }

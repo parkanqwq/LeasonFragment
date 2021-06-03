@@ -3,7 +3,7 @@
     <item
         android:id="@+id/action_settings"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:orderInCategory="100"
+        android:orderInCategory="25"
         android:title="@string/settings" />
     <item
         android:id="@+id/action_main"
@@ -15,4 +15,9 @@
         android:icon="@android:drawable/btn_star_big_on"
         android:orderInCategory="20"
         android:title="@string/favorite"/>
+    <item
+        android:id="@+id/action_exit_google"
+        android:icon="@drawable/common_full_open_on_phone"
+        android:orderInCategory="30"
+        android:title="@string/exit_google_app"/>
 </menu>

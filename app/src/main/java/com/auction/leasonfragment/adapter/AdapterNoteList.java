@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.auction.leasonfragment.NoteImageActivity;
 import com.auction.leasonfragment.R;
 import com.auction.leasonfragment.model.ModelNoteList;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,6 +29,8 @@ public class AdapterNoteList extends RecyclerView.Adapter<AdapterNoteList.UserVi
     private final List<ModelNoteList> modelNoteLists;
     private final DataSnapshot snapshot;
     private final Context context;
+    private FirebaseUser currentUser;
+    private FirebaseAuth firebaseAuth;
 
     public AdapterNoteList(Context context, List<ModelNoteList> modelNoteLists, DataSnapshot snapshot) {
         this.modelNoteLists = modelNoteLists;
@@ -50,6 +54,9 @@ public class AdapterNoteList extends RecyclerView.Adapter<AdapterNoteList.UserVi
         holder.itemView.setOnClickListener(view -> {
             showImage(position, view, holder);
         });
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
         holder.imageChange.setOnClickListener(view -> {
             final AlertDialog.Builder adminDialog = new AlertDialog.Builder(view.getContext())
                     .setCancelable(false);
@@ -62,9 +69,14 @@ public class AdapterNoteList extends RecyclerView.Adapter<AdapterNoteList.UserVi
                 for (DataSnapshot snapshot : snapshot.getChildren()){
                     ModelNoteList modelNote1 = snapshot.getValue(ModelNoteList.class);
                     if (modelNote1.getId().equals(modelNoteLists.get(position).getId())){
-                        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Note")
-                                .child(snapshot.getKey());
-                        reference.removeValue();
+                        try {
+                            DatabaseReference reference = FirebaseDatabase.getInstance().
+                                    getReference("Note")
+                                    .child(currentUser.getUid())
+                                    .child("Note")
+                                    .child(snapshot.getKey());
+                            reference.removeValue();
+                        } catch (Exception e){}
                         Toast.makeText(view.getContext(), "Заметка удалена", Toast.LENGTH_SHORT).show();
                     }
                 }

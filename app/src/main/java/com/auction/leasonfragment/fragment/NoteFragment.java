@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.auction.leasonfragment.R;
 import com.auction.leasonfragment.adapter.AdapterNoteList;
 import com.auction.leasonfragment.model.ModelNoteList;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -31,6 +33,8 @@ public class NoteFragment extends Fragment {
     private List<ModelNoteList> modelNoteLists;
     private AdapterNoteList adapterNoteList;
     private RecyclerView recyclerView;
+    private  FirebaseUser currentUser;
+    private FirebaseAuth firebaseAuth;
 
     public NoteFragment() {}
 
@@ -40,6 +44,9 @@ public class NoteFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_note, container, false);
         setHasOptionsMenu(true);
         recyclerView = view.findViewById(R.id.recyclerView);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
 
         boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         if (isLandscape) {
@@ -56,21 +63,27 @@ public class NoteFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         modelNoteLists = new ArrayList<>();
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Note");
-        reference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                modelNoteLists.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    ModelNoteList modelNote = snapshot.getValue(ModelNoteList.class);
-                    modelNoteLists.add(ADD_FRAGMENT_ZERO_POSITION, modelNote);
+        try {
+            DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Note")
+                    .child(currentUser.getUid())
+                    .child("Note");
+            reference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    modelNoteLists.clear();
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                        ModelNoteList modelNote = snapshot.getValue(ModelNoteList.class);
+                        modelNoteLists.add(ADD_FRAGMENT_ZERO_POSITION, modelNote);
+                    }
+                    adapterNoteList = new AdapterNoteList(getContext(), modelNoteLists, dataSnapshot);
+                    recyclerView.setAdapter(adapterNoteList);
                 }
-                adapterNoteList = new AdapterNoteList(getContext(), modelNoteLists, dataSnapshot);
-                recyclerView.setAdapter(adapterNoteList);
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
+        } catch (Exception e){}
+
+
     }
 }

@@ -20,6 +20,8 @@ import androidx.fragment.app.Fragment;
 
 import com.auction.leasonfragment.R;
 import com.auction.leasonfragment.model.ModelNoteList;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,6 +37,8 @@ public class NoteOpenFragment extends Fragment {
     private TextView noteData;
     private EditText textNote;
     private DatabaseReference reference;
+    private FirebaseUser currentUser;
+    private FirebaseAuth firebaseAuth;
 
     public NoteOpenFragment() {
     }
@@ -53,6 +57,9 @@ public class NoteOpenFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_note_open, container, false);
         setToolBar(view);
 
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
+
         textNote = view.findViewById(R.id.textNote);
         noteData = view.findViewById(R.id.noteData);
         noteName = view.findViewById(R.id.noteName);
@@ -64,12 +71,15 @@ public class NoteOpenFragment extends Fragment {
             textNote.setFocusableInTouchMode(true);
         });
 
-        reference = FirebaseDatabase.getInstance().getReference("Note");
+        reference = FirebaseDatabase.getInstance().getReference("Note")
+                .child(currentUser.getUid())
+                .child("Note");
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()){
                     ModelNoteList modelNote = snapshot.getValue(ModelNoteList.class);
+                    assert modelNote != null;
                     if (modelNote.getId().equals(id)){
                         noteName.setText(modelNote.getName());
                         noteData.setText(modelNote.getDateNote());
@@ -98,7 +108,9 @@ public class NoteOpenFragment extends Fragment {
     }
 
     private void saveNoteFareBase() {
-        reference = FirebaseDatabase.getInstance().getReference("Note");
+        reference = FirebaseDatabase.getInstance().getReference("Note")
+                .child(currentUser.getUid())
+                .child("Note");
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
