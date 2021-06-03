@@ -179,8 +179,16 @@ public class MainActivity extends AppCompatActivity {
     private boolean navigateFragment(int id) {
         switch (id) {
             case R.id.action_exit_google:
-                FirebaseAuth.getInstance().signOut();
-                recreate();
+                AlertDialog.Builder adminDialogExit = new AlertDialog.Builder(MainActivity.this)
+                        .setCancelable(false);
+                adminDialogExit.setTitle("Выйти");
+                adminDialogExit.setMessage("Вы уверены");
+                adminDialogExit.setNegativeButton("Нет", (dialogCansel, which) -> dialogCansel.dismiss());
+                adminDialogExit.setPositiveButton("Выйти", (dialogFinish, which) -> {
+                    FirebaseAuth.getInstance().signOut();
+                    recreate();
+                });
+                adminDialogExit.show();
                 return true;
             case R.id.action_settings:
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
