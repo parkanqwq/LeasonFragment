@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "535421227904",
+    "firebase_url": "https://mynote-9c32e-default-rtdb.firebaseio.com",
+    "project_id": "mynote-9c32e",
+    "storage_bucket": "mynote-9c32e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535421227904:android:e4107f6e24958f28586765",
+        "android_client_info": {
+          "package_name": "com.auction.leasonfragment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "535421227904-ocb823o3unp2om3if3hp3juua8porebh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEpKUDxB843FzWs1HHPva7n-uQNvYHF4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "535421227904-ocb823o3unp2om3if3hp3juua8porebh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

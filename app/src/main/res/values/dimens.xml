@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="nav_header_dimen">28dp</dimen>
+    <dimen name="good_padding_8">8dp</dimen>
+    <dimen name="good_padding_16">16dp</dimen>
+    <dimen name="size_text_dialog">24sp</dimen>
+</resources>
